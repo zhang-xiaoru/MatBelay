@@ -1,0 +1,5 @@
+<<one line stating the mesh AND why — e.g. "Gamma only (3x3x4 supercell; matches 5x5x7 IFC baseline)">>
+0
+Monkhorst-Pack
+<<n1 n2 n3>>
+0 0 0

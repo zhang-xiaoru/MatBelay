@@ -1,0 +1,15 @@
+{
+  "_comment": "Copy to .mcp.json and fill in. See SETUP.md step 1. .mcp.json is gitignored -- never commit it.",
+  "mcpServers": {
+    "tacc-slurm": {
+      "type": "stdio",
+      "command": "/path/to/python3",
+      "args": ["tacc_mcp/server.py"],
+      "env": {
+        "LS6_SSH_ALIAS":        "ls6",
+        "LS6_SCRATCH_DIR":      "/scratch/<system-id>/<username>",
+        "TACC_DEFAULT_CLUSTER": "ls6"
+      }
+    }
+  }
+}

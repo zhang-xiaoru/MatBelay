@@ -1,0 +1,9 @@
+# Node deps — reinstall with `npm install`
+node_modules/
+
+# Vite caches
+.vite/
+*.local
+
+# Keep dist/ committed so end users can run without Node.
+# (do NOT ignore dist/)

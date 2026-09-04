@@ -1,0 +1,69 @@
+#!/bin/bash
+#----------------------------------------------------
+# SLURM job skeleton — TACC Lonestar6
+#
+# Fill the <angle brackets>. Everything below the #SBATCH block belongs to the
+# TOOL, not to this template: which modules to load and how to launch are facts
+# about the code being run, and each tool's skill states them.
+#
+# Choosing the values:  prepare-node -> references/sbatch_header.md
+# Node sizes, queue caps, charge rates:  reference/taccLS6-nodes.md
+# Verify caps live before committing:  qlimits   (they drift)
+#
+# Sizing, in one line: -N buys you -N x 128 cores on a Milan node. How those
+# split into MPI ranks (-n) and threads (OMP_NUM_THREADS) is the tool's call --
+# ask its skill. Do NOT default to one rank per core: a hybrid code is usually
+# slower that way and each rank is starved of memory.
+#----------------------------------------------------
+
+#SBATCH -J <name>              # job name; also the .batch filename stem
+#SBATCH -o <name>.o%j          # stdout  (%j = job id)
+#SBATCH -e <name>.e%j          # stderr  -- the file health probes read
+#SBATCH -p <queue>             # normal | development | gpu-a100 | gpu-h100 | ...
+#SBATCH -N <nodes>             # nodes
+#SBATCH -n <tasks>             # total MPI tasks -- from the tool's skill
+#SBATCH -t <hh:mm:ss>          # walltime; pad ~25%, stay under the queue cap
+#SBATCH -A <<ALLOCATION>|<ALLOCATION_2>> # allocation
+#SBATCH --mail-type=all
+#SBATCH --mail-user=you@your.institution.edu
+
+# --- module load + launch: from the tool's skill, not from here ---------------
+# Look the node's `tool` up in reference/quick-ref.md and follow its skill.
+
+
+#==============================================================================
+# EXAMPLE A -- CPU relaxation on LS6 (`normal`), hybrid MPI+OpenMP
+#
+# 4 Milan nodes, 8 threads/rank -> 16 ranks/node -> -n = 64, 24 h.
+# -n = 64 divides by the common KPAR values (1,2,4,8,16,32,64), so VASP's
+# k-point groups split evenly. The rank/thread arithmetic is `vasp`'s rule;
+# what this template fixes is that (ranks/node) x threads = 128, not 56.
+#------------------------------------------------------------------------------
+# #SBATCH -J host_relax
+# #SBATCH -o relax.o%j
+# #SBATCH -e relax.e%j
+# #SBATCH -p normal
+# #SBATCH -N 4
+# #SBATCH -n 64                # 16 ranks/node x 4 nodes  (128/T x N, T=8)
+# #SBATCH -t 24:00:00
+# #SBATCH -A <ALLOCATION>
+# #SBATCH --mail-type=all
+# #SBATCH --mail-user=you@your.institution.edu
+#
+# module load intel/24         # \
+# module load hdf5/2           #  } all four lines: skill `vasp`
+# export OMP_NUM_THREADS=8     # /
+# ibrun vasp_std               # ibrun on TACC CPU -- never mpirun
+#
+#==============================================================================
+# EXAMPLE B -- short validation run on LS6 (`development`)
+#
+# Same body, smaller and shorter. Use it to prove inputs run before committing
+# a long `normal` job; the queue turns around in minutes but caps at 2 h.
+#------------------------------------------------------------------------------
+# #SBATCH -p development
+# #SBATCH -N 1
+# #SBATCH -n 16                # 128/T with T=8
+# #SBATCH -t 00:30:00
+# # export OMP_NUM_THREADS=8
+#==============================================================================

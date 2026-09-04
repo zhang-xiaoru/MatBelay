@@ -1,0 +1,22 @@
+# --- secrets and machine-local config ----------------------------------------
+.mcp.json                 # holds your scratch path and any API keys; see .mcp.json.example
+.claude/settings.local.json
+
+# --- runtime state -----------------------------------------------------------
+project_workflow/.watchlist
+project_workflow/.watchstate
+
+# --- fetched results are outputs, not source ---------------------------------
+tacc_fetch/*/
+
+# --- build artefacts ---------------------------------------------------------
+# NOTE: dag_viewer/web/dist/ is deliberately NOT ignored -- it is a committed
+# Vite build so `python3 dag_viewer/serve.py` works with no Node installed.
+node_modules/
+__pycache__/
+*.py[cod]
+
+# --- editor / OS -------------------------------------------------------------
+.DS_Store
+*~
+*.swp

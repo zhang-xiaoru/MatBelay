@@ -1,0 +1,68 @@
+{
+  "skill_name": "workflow-dag",
+  "evals": [
+    {
+      "id": 0,
+      "name": "create-new-dag",
+      "prompt": "ok im starting a new exploration - Nb_Ti substitutional defect in r-TiO2, same pipeline shape as the Nb_Ti one. can you set up the workflow dag for it? call the exploration defect_kappa. the stages are: pull the pristine relaxed POSCAR + 5x5x7 force constants from the finished pristine run (local, no allocation); relax the Nb_Ti 3x3x4 supercell ions only on lonestar6 under <ALLOCATION>, 8h walltime; host reference IFCs at 3x3x4 on the pristine cell, lonestar6 <ALLOCATION> - this one does NOT need the relax, it can go in parallel straight off the import; defect IFCs on the relaxed Nb_Ti cell, lonestar6 <ALLOCATION> - needs the relax done; dPhi extraction local - needs BOTH the host reference IFCs and the defect IFCs.",
+      "expected_output": "A workflow_dag.json stamped from the template (exactly 4 top-level keys, 8-entry legend, 15 preset node fields, no _comment/_node_format leakage), 5 nodes with correct fan-out from the root and fan-in at dPhi, levels 0/1/1/2/3, clean check_dag.py.",
+      "files": [],
+      "assertions": [
+        "workflow_dag.json exists and is valid JSON",
+        "top-level keys are exactly exploration/description/status_legend/nodes (no _comment or _node_format leaked from the template)",
+        "exploration is defect_kappa",
+        "status_legend is the full 8-entry template legend including 'terminated'",
+        "exactly 5 nodes, each with exactly the 15 preset node fields (no extra, none missing)",
+        "topology is correct: root has prev=[]; relax and host-ref both hang off the root; defect-IFC depends on the relax; dPhi has BOTH host-ref and defect-IFC as parents",
+        "levels are derived correctly (0, 1, 1, 2, 3)",
+        "the two local nodes use cluster=local, and the three TACC nodes use lonestar6 + <ALLOCATION>",
+        "scripts/check_dag.py exits 0 on the file"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "terminate-and-rewire",
+      "prompt": "the 3x3x4 supercell we used for ifc_dopant was too small - the defect wavefunction still overlaps its periodic image at that size, so those force constants arent usable. the job itself finished clean, exit 0, no errors at all. we're redoing it at 3x3x5. can you update the dag: retire the old one, and add the 3x3x5 version in its place so the downstream steps run off the new one instead.",
+      "expected_output": "ifc_dopant set to 'terminated' (not failed, not deleted) with a reason naming the supercell/image overlap, its job_id preserved; a new 3x3x5 IFC node added; dphi_extract re-pointed off the terminated node onto the new one; check_dag.py clean with no stranded-branch warning.",
+      "files": ["fixtures/eval2_workflow_dag.json"],
+      "assertions": [
+        "ifc_dopant has status 'terminated' (NOT 'failed')",
+        "ifc_dopant is still present in the file - the node was retired, not deleted",
+        "ifc_dopant has a non-empty terminated_reason naming the supercell size / periodic-image overlap",
+        "ifc_dopant keeps its original job_id as provenance",
+        "a new node for the 3x3x5 defect IFC run exists",
+        "dphi_extract's prev no longer contains the terminated node and does contain the new node",
+        "no live node is left stranded below the terminated node (check_dag.py emits no stranded warning)",
+        "scripts/check_dag.py exits 0 on the file"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "completed-vs-failed",
+      "prompt": "job 3301574 (dopant_relax) just came off the queue. sacct says State=COMPLETED ExitCode=0:0 Elapsed=07:58:12. i dropped the tails of the OUTCAR and OSZICAR next to the dag file. we ran that relax with NSW=200, and we need max force under 5 meV/A before the IFC step can use the structure. record the outcome in the dag please.",
+      "expected_output": "relax_dopant recorded as 'failed', NOT 'completed' - the run hit the NSW=200 ionic limit with max force ~49 meV/A, far above the 5 meV/A gate, despite SLURM reporting COMPLETED with exit 0.",
+      "files": ["fixtures/eval3_workflow_dag.json", "fixtures/eval3_OUTCAR_tail.txt", "fixtures/eval3_OSZICAR_tail.txt"],
+      "assertions": [
+        "relax_dopant has status 'failed' - NOT 'completed'",
+        "the agent's reasoning cites the physics evidence (NSW=200 limit reached and/or max force ~49 meV/A exceeding the 5 meV/A gate), not just the SLURM exit code",
+        "the node still has exactly the preset field set - no invented fields such as 'max_force' or 'converged'",
+        "scripts/check_dag.py exits 0 on the file"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "submit-to-queued",
+      "prompt": "just submitted the dopant ifc job: sbatch returned 'Submitted batch job 3306950', and squeue --start shows JOBID 3306950, NAME dopant_ifc, ST PD, START_TIME 2026-08-25T14:20:00, 4 nodes. mark that in the dag.",
+      "expected_output": "ifc_dopant moved to 'queued' with job_id 3306950, job_name dopant_ifc, and expected_start carrying the 2026-08-25 14:20 queue ETA.",
+      "files": ["fixtures/eval4_workflow_dag.json"],
+      "assertions": [
+        "ifc_dopant has status 'queued'",
+        "job_id is 3306950",
+        "job_name is dopant_ifc",
+        "expected_start records the 2026-08-25 14:20 start estimate",
+        "the node still has exactly the preset field set - no invented fields such as 'partition' or 'nodes'",
+        "scripts/check_dag.py exits 0 on the file"
+      ]
+    }
+  ]
+}

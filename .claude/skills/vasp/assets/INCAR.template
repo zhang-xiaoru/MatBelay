@@ -1,0 +1,51 @@
+SYSTEM = <<what this cell is, and which run it must stay consistent with>>
+
+# --- electronic ---
+PREC   = Accurate
+ENCUT  = <<1.25 x max ENMAX over the POTCARs>>  # WHY: held fixed across every node
+                                                # whose results get differenced?
+EDIFF  = 1E-6
+ALGO   = Normal
+NELM   = 300
+ISMEAR = 0
+SIGMA  = 0.05
+LREAL  = <<Auto | .FALSE.>>   # WHY: Auto for large cells, .FALSE. for small
+                              # (reciprocal-space projection is exact and cheaper)
+LASPH  = <<.TRUE. | delete>>  # WHY: aspherical PAW — matters for d electrons
+# <<record any DELIBERATE OMISSION here, e.g. "GGA unset -> LDA (CA)">>
+
+# --- spin ---   (delete the whole block if non-magnetic)
+ISPIN   = 2
+MAGMOM  = <<one value per atom, POSCAR order>>   # <<Ti(71) Nb(1) O(144)>>
+NUPDOWN = <<net unpaired electrons, or delete>>  # WHY:
+
+# --- run mode: keep ONE block, delete the others ---
+
+## relax
+IBRION = 2                    # 1 = quasi-Newton, better close to the minimum
+ISIF   = <<2 ions only | 3 cell+ions>>   # WHY:
+NSW    = 100
+EDIFFG = -0.05
+LWAVE  = .TRUE.               # keep WAVECAR for a warm restart
+
+## single-point forces  (phonon displacement, static SCF)
+# IBRION = -1
+# NSW    = 0
+# LWAVE  = .FALSE.
+
+## DFPT  (Born effective charges / dielectric tensor)
+# IBRION = 8
+# NSW    = 0
+# LWAVE  = .FALSE.
+
+## DOS
+# IBRION = -1
+# NSW    = 0
+# LORBIT = 11
+# ICHARG = 2                  # reuse CHGCAR from the preceding SCF
+
+# --- symmetry / parallel / IO ---
+ISYM   = <<0 if a defect breaks symmetry | 2>>   # WHY:
+KPAR   = <<>>                 # WHY: total MPI ranks must be a multiple of this
+NSIM   = <<GPU runs only>>
+LCHARG = .FALSE.

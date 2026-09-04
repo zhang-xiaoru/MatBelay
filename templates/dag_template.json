@@ -1,0 +1,50 @@
+{
+  "_comment": "Template for an exploration's workflow DAG. Copy to project_workflow/<exploration>/workflow_dag.json and fill in. One object per computation node; edges are given by prev/next lists of node IDs. Each node has a UNIQUE integer `id` (identity, referenced by prev/next) and an integer `level` (tree depth: nodes that can run in parallel share a level; level = max(parent levels)+1). The scheduler sweeps by level and a node is ready when every prev is 'completed'. A node marked 'terminated' has been judged invalid and is OUT of the live graph: it never becomes 'completed', so nothing downstream of it can ever become ready. Keys beginning with '_' are documentation only -- do NOT copy them into a real workflow_dag.json (use scripts/new_dag.py, which strips them).",
+  "exploration": "<exploration_tag>",
+  "description": "<one-line exploration summary>",
+  "status_legend": ["pending", "ready", "queued", "running", "completed", "failed", "blocked", "terminated"],
+  "_node_format": {
+    "name": "human-readable node id, matches the run dir name where applicable",
+    "description": "short (<= ~120 chars) summary of what this node computes",
+    "status": "one of status_legend (start as 'pending', or 'blocked' with blocked_on)",
+    "id": "UNIQUE integer identity; the value referenced by other nodes' prev/next",
+    "level": "integer tree depth; parallel nodes share a level; level = max(parent levels)+1 (root=0)",
+    "tool": "computational software this node runs (vasp | phonopy | shengbte | ...), lowercase, matching its skill/reference name in reference/quick-ref.md; '' for a node that runs no batch job. This is what selects the health probe: .claude/skills/<tool>/scripts/probe.sh if it exists, else scripts/probe_generic.sh",
+    "cluster": "HPC cluster this node runs on (lonestar6 | frontera | local | ...)",
+    "allocation": "TACC allocation charged (<ALLOCATION> | <ALLOCATION_2> | - for local)",
+    "partition": "SLURM partition / queue this job runs in (normal | development | gpu-a100 | ...); '' for local steps",
+    "num_nodes": "number of compute nodes requested (SLURM -N), as a string e.g. '4'; '' for local steps",
+    "expected_start": "expected/scheduled job start time (e.g. '2026-07-04 09:00' or queue ETA); '' if unknown",
+    "request_time": "requested walltime (HH:MM:SS). For a cluster node this is the SLURM -t. For a `cluster: local` node it is OPTIONAL and means the wall-clock cap the local-node runner enforces; leave '' to take that runner's 10-minute default",
+    "job_id": "slurm job id once submitted; '' until submitted",
+    "job_name": "slurm job name (-J); '' until assigned",
+    "elapsed_time": "live wall-clock elapsed since the job started (HH:MM:SS, updated while status=running); '' if not started",
+    "running_time": "final total runtime once the job has finished (HH:MM:SS); '' until run",
+    "blocked_on": "OPTIONAL: what must be provided before this node can run; present only while status = 'blocked'",
+    "terminated_reason": "OPTIONAL: short (<= ~120 chars) reason this node was judged invalid; present only while status = 'terminated'",
+    "prev": ["list of upstream node ids (e.g. [0, 1])"],
+    "next": ["list of downstream node ids; [] if terminal"]
+  },
+  "nodes": [
+    {
+      "name": "<node_id>",
+      "description": "<short summary>",
+      "status": "pending",
+      "id": 0,
+      "level": 0,
+      "tool": "",
+      "cluster": "",
+      "allocation": "",
+      "partition": "",
+      "num_nodes": "",
+      "expected_start": "",
+      "request_time": "",
+      "job_id": "",
+      "job_name": "",
+      "elapsed_time": "",
+      "running_time": "",
+      "prev": [],
+      "next": []
+    }
+  ]
+}
