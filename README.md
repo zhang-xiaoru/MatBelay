@@ -251,10 +251,6 @@ physics well enough to review those decisions.
 - End-to-end support is limited to Claude Code and TACC Lonestar6.
 - VASP is the only computational package with a complete preparation skill,
   application-specific health probe, and success-check contract.
-- `phonopy`, `thirdorder`, and `ShengBTE` can be represented in a plan, but they
-  currently fall back to generic monitoring and require a human result verdict.
-- Stampede3 appears in the MCP cluster registry and reference notes, but its
-  workflow support is incomplete and should be treated as experimental.
 - The watcher recognizes scheduler, runtime, and known application errors. It
   does not infer a hang from quiet output; SLURM walltime remains the backstop.
 - The DAG viewer and run driver do not coordinate concurrent writes.
